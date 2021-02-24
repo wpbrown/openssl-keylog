@@ -1,6 +1,6 @@
 # openssl-keylog
 
-Add SSLKEYLOGFILE support to any dynamically linked app using OpenSSL 1.1+, including the .NET 5 runtime.
+Add [`SSLKEYLOGFILE`](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/Key_Log_Format) support to any dynamically linked app using OpenSSL 1.1+, including the .NET 5 runtime.
 
 ## Building
 
