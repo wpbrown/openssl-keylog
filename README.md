@@ -1,6 +1,6 @@
 # openssl-keylog
 
-Add [`SSLKEYLOGFILE`](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/Key_Log_Format) support to any dynamically linked app using OpenSSL 1.1+, including the .NET 5 runtime.
+Add [`SSLKEYLOGFILE`](https://developer.mozilla.org/en-US/docs/Mozilla/Projects/NSS/Key_Log_Format) support to any dynamically linked app using OpenSSL 1.1.1+, including the .NET 5 runtime.
 
 ## Building
 
@@ -12,7 +12,7 @@ make
 
 ## Usage 
 
-Start a network capture on `eth0` in the background. Run your command with the sslkeylogged script. If you don't set `SSLKEYLOGFILE` an value will be set and printed before running your command.
+Start a network capture on `eth0` in the background. Run your command with the sslkeylogged script. If you don't set `SSLKEYLOGFILE`, a value will be set and printed before running your command.
 
 ```
 $ sudo dumpcap -i eth0 -w /tmp/output.pcapng &
