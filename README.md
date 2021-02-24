@@ -12,11 +12,16 @@ make
 
 ## Usage 
 
-Start a network capture on `some_interface` in the background. Export the path to the key log output and the path to this library. Run your command.
+Start a network capture on `eth0` in the background. Run your command with the sslkeylogged script. If you don't set `SSLKEYLOGFILE` an value will be set and printed before running your command.
 
 ```
-sudo dumpcap -i some_interface -w /path/to/output.pcapng &
-sslkeylogged command_to_trace
+$ sudo dumpcap -i eth0 -w /tmp/output.pcapng &
+$ sslkeylogged ./SimulatedDevice
+*** SSLKEYLOGFILE set to /tmp/sslkeys-cOHTcLbk.txt ***
+IoT Hub - Simulated Mqtt device.
+Press control-C to exit.
+02/24/2021 03:13:08 > Sending message: {"temperature":32.53831510550264,"humidity":63.50118943653125}
+...
 ```
 
 # Credit 
