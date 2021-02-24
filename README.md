@@ -1,6 +1,6 @@
 # openssl-keylog
 
-Add SSLKEYLOGFILE support to any dynamically linked app using OpenSSL 1.1+.
+Add SSLKEYLOGFILE support to any dynamically linked app using OpenSSL 1.1+, including the .NET 5 runtime.
 
 ## Building
 
@@ -16,9 +16,7 @@ Start a network capture on `some_interface` in the background. Export the path t
 
 ```
 sudo dumpcap -i some_interface -w /path/to/output.pcapng &
-export SSLKEYLOGFILE=/path/to/output.txt
-export LD_PRELOAD=/path/to/libsslkeylog.so 
-command_to_trace
+sslkeylogged command_to_trace
 ```
 
 # Credit 

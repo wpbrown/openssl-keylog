@@ -1,0 +1,14 @@
+#!/bin/bash
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+export LD_PRELOAD="${DIR}/libsslkeylog.so"
+
+if [[ -z $SSLKEYLOGFILE ]]; then
+    SSLKEYLOGFILE=$(mktemp -t "sslkeys-XXXXXXXX.txt")
+    echo "*** SSLKEYLOGFILE set to ${SSLKEYLOGFILE} ***"
+fi
+
+export SSLKEYLOGFILE
+
+exec "$@"
