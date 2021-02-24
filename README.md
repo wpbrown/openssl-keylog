@@ -26,7 +26,7 @@ $ export PATH=/home/foo/openssl-keylog:$PATH
 Start a network capture on `eth0` in the background (your interface name may be different). Run your command with the sslkeylogged script. If you don't set `SSLKEYLOGFILE`, a value will be set and printed before running your command.
 
 ```shell
-$ sudo dumpcap -i eth0 -w /tmp/output.pcapng &
+$ sudo dumpcap -q -i eth0 -w /tmp/output.pcapng &
 $ sslkeylogged ./SimulatedDevice
 *** SSLKEYLOGFILE set to /tmp/sslkeys-cOHTcLbk.txt ***
 IoT Hub - Simulated Mqtt device.
