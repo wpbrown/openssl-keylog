@@ -25,7 +25,7 @@
  * the NO_OPENSSL_102_SUPPORT or NO_OPENSSL_110_SUPPORT macros.
  */
 /* Define to drop OpenSSL <= 1.0.2 support and require OpenSSL >= 1.1.0. */
-//#define NO_OPENSSL_102_SUPPORT
+#define NO_OPENSSL_102_SUPPORT
 /* Define to drop OpenSSL <= 1.1.0 support and require OpenSSL >= 1.1.1. */
 //#define NO_OPENSSL_110_SUPPORT
 
@@ -55,7 +55,7 @@
 #   define OPENSSL_SONAME   "libssl.dylib"
 #  else
 /* Other values to try: libssl.so.0.9.8 libssl.so.1.0.0 libssl.so.1.1 */
-#   define OPENSSL_SONAME   "libssl.so"
+#   define OPENSSL_SONAME   "libssl.so.1.1"
 # endif
 #endif
 
@@ -81,6 +81,8 @@ static int keylog_file_fd = -1;
 #ifndef NO_OPENSSL_110_SUPPORT
 #define PREFIX      "CLIENT_RANDOM "
 #define PREFIX_LEN  (sizeof(PREFIX) - 1)
+
+void *real_dlsym(void *handle, const char *name);
 
 static inline void put_hex(char *buffer, int pos, char c)
 {
@@ -134,8 +136,8 @@ static void init_keylog_file(void)
 
 static inline void *try_lookup_symbol(const char *sym, int optional)
 {
-    void *func = dlsym(RTLD_NEXT, sym);
-    if (!func && optional && dlsym(RTLD_NEXT, "SSL_new")) {
+    void *func = real_dlsym(RTLD_NEXT, sym);
+    if (!func && optional && real_dlsym(RTLD_NEXT, "SSL_new")) {
         /* Symbol not found, but an old OpenSSL version was actually loaded. */
         return NULL;
     }
@@ -148,7 +150,7 @@ static inline void *try_lookup_symbol(const char *sym, int optional)
             fprintf(stderr, "Lookup error for %s: %s\n", sym, dlerror());
             abort();
         }
-        func = dlsym(handle, sym);
+        func = real_dlsym(handle, sym);
         if (!func && !optional) {
             fprintf(stderr, "Cannot lookup %s\n", sym);
             abort();
@@ -360,6 +362,8 @@ SSL *SSL_new(SSL_CTX *ctx)
     static SSL *(*func)();
     static void (*set_keylog_cb)();
     if (!func) {
+        //fprintf(stderr, "[SSLKEYLOG] INIT\n");
+
         func = lookup_symbol(__func__);
 #ifdef NO_OPENSSL_110_SUPPORT
         /* The new API MUST be available since OpenSSL 1.1.1. */
@@ -370,8 +374,33 @@ SSL *SSL_new(SSL_CTX *ctx)
 #endif /* ! NO_OPENSSL_110_SUPPORT */
     }
     if (set_keylog_cb) {
+        //fprintf(stderr, "[SSLKEYLOG] ENABLING\n");
         /* Override any previous key log callback. */
         set_keylog_cb(ctx, keylog_callback);
     }
     return func(ctx);
+}
+
+extern void *_dl_sym(void *, const char *, void *);
+
+extern void *dlsym(void *handle, const char *name)
+{
+    if (!strcmp(name,"dlsym")) 
+        return dlsym;
+
+    if (!strcmp(name,"SSL_new")) {
+        //fprintf(stderr, "[SSLKEYLOG] DLSYM\n");
+        return SSL_new;
+    }
+
+    return real_dlsym(handle,name);
+}
+
+void *real_dlsym(void *handle, const char *name)
+{
+    static void * (*real_dlsym)(void *, const char *)=NULL;
+    if (real_dlsym == NULL)
+        real_dlsym=_dl_sym(RTLD_NEXT, "dlsym", dlsym);
+
+    return real_dlsym(handle,name);
 }
