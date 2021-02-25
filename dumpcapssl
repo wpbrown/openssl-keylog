@@ -26,6 +26,10 @@ sudo setsid bash -c "echo \$\$ > ${CAPTURE_FILE}.pid; exec dumpcap -q -i ${INTER
 sleep 1
 export SSLKEYLOGFILE
 echo "*** Starting Command ***"
+int_trap() {
+    echo "*** Command Interrupted ***"
+}
+trap int_trap INT
 sslkeylogged "${@:2}"
 echo "*** Command Stopped ***"
 sleep 1
