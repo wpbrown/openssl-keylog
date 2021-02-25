@@ -1,0 +1,40 @@
+#!/bin/bash
+
+if [[ -z $1 ]]; then
+    echo "Usage: dumpcapssl <INTERFACE> <COMMAND> [COMMAND_ARGS]..."
+    echo 
+    echo "Example: dumpcapssl eth0 curl https://www.google.com/"
+    echo 
+    echo "Uses SSLKEYLOGFILE if set, otherwise generates random temporary paths."
+    echo
+    exit 1
+fi
+
+INTERFACE=$1
+
+if [[ -z ${SSLKEYLOGFILE} ]]; then
+    SSLKEYLOGFILE=$(mktemp -t "dumpcapssl-XXXXXXXX.keys")
+    echo "*** SSL keys: ${SSLKEYLOGFILE} ***"
+fi
+
+CAPTURE_FILE="${SSLKEYLOGFILE%.*}.pcapng"
+echo "*** Capture : ${CAPTURE_FILE} from interface: ${INTERFACE} ***"
+
+echo "*** Starting Capture ***"
+sudo setsid bash -c "echo \$\$ > ${CAPTURE_FILE}.pid; exec dumpcap -q -i ${INTERFACE} -w ${CAPTURE_FILE}" &
+
+sleep 1
+export SSLKEYLOGFILE
+echo "*** Starting Command ***"
+sslkeylogged "${@:2}"
+echo "*** Command Stopped ***"
+sleep 1
+
+echo "*** Stopping Capture ***"
+CAPTURE_PID=$(cat ${CAPTURE_FILE}.pid)
+if [[ -n ${CAPTURE_PID} ]]; then
+    sudo kill ${CAPTURE_PID}
+fi
+
+sudo chown ${USER}: ${CAPTURE_FILE}
+echo "*** Stopped Capture : ${CAPTURE_FILE} Keys: ${SSLKEYLOGFILE} ***"

@@ -23,7 +23,7 @@ $ export PATH=/home/foo/openssl-keylog:$PATH
 
 ## Usage 
 
-Start a network capture on `eth0` in the background (your interface name may be different). Run your command with the sslkeylogged script. If you don't set `SSLKEYLOGFILE`, a value will be set and printed before running your command.
+Start a network capture on `eth0` in the background (your interface name may be different). Run your command with the `sslkeylogged` script. If you don't set `SSLKEYLOGFILE`, a value will be set and printed before running your command.
 
 ```shell
 $ sudo dumpcap -q -i eth0 -w /tmp/output.pcapng &
@@ -35,8 +35,31 @@ Press control-C to exit.
 ...
 ```
 
+The process of capturing during command execution can be automated with the `dumpcapssl` script.
+
+```shell
+$ dumpcapssl eth0 ./SimulatedDevice
+*** SSL keys: /tmp/dumpcapssl-BsybG1mk.keys ***
+*** Capture : /tmp/dumpcapssl-BsybG1mk.pcapng from interface: eth0 ***
+*** Starting Capture ***
+Capturing on 'eth0'
+File: /tmp/dumpcapssl-BsybG1mk.pcapng
+*** Starting Command ***
+IoT Hub - Simulated Mqtt device.
+Press control-C to exit.
+...
+^C
+Exiting...
+Device simulator finished.
+*** Command Stopped ***
+*** Stopping Capture ***
+Packets captured: 556
+Packets received/dropped on interface 'eth0': 556/0 (pcap:0/dumpcap:0/flushed:0/ps_ifdrop:0) (100.0%)
+*** Stopped Capture : /tmp/dumpcapssl-BsybG1mk.pcapng Keys: /tmp/dumpcapssl-BsybG1mk.keys ***
+```
+
 Set the `sslkeys` text file in your Wireshark [preferences](https://wiki.wireshark.org/TLS) before you open the capture file to see the decrypted TLS traffic.
 
 # Credit 
 
-This code is forked from [sslkeylog.c](https://git.lekensteyn.nl/peter/wireshark-notes/tree/src/sslkeylog.c) by Peter Wu. Also thanks to Peter for his [StackExchange post](https://security.stackexchange.com/a/80174).
+The C code is forked from [sslkeylog.c](https://git.lekensteyn.nl/peter/wireshark-notes/tree/src/sslkeylog.c) by Peter Wu. Also thanks to Peter for his [StackExchange post](https://security.stackexchange.com/a/80174).
