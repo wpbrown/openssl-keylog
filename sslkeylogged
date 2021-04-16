@@ -2,7 +2,12 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-export LD_PRELOAD="${DIR}/libsslkeylog.so"
+if [[ -f "${DIR}/libsslkeylog.so" ]]; then
+    export LD_PRELOAD="${DIR}/libsslkeylog.so"
+else
+    export LD_PRELOAD="${DIR}/../share/sslkeylog/preload/libsslkeylog.so"
+fi
+
 
 if [[ -z $SSLKEYLOGFILE ]]; then
     SSLKEYLOGFILE=$(mktemp -t "sslkeys-XXXXXXXX.txt")

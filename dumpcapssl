@@ -18,10 +18,15 @@ if [[ -z ${SSLKEYLOGFILE} ]]; then
 fi
 
 CAPTURE_FILE="${SSLKEYLOGFILE%.*}.pcapng"
+TMP_CAPTURE_FILE=$(mktemp -t "dumpcapssl-XXXXXXXX.tmp.pcapng")
 echo "*** Capture : ${CAPTURE_FILE} from interface: ${INTERFACE} ***"
 
+rm -f ${SSLKEYLOGFILE}
+rm -f ${CAPTURE_FILE}
+
 echo "*** Starting Capture ***"
-sudo setsid bash -c "echo \$\$ > ${CAPTURE_FILE}.pid; exec dumpcap -q -i ${INTERFACE} -w ${CAPTURE_FILE}" &
+sudo chown root: ${TMP_CAPTURE_FILE}
+sudo setsid bash -c "echo \$\$ > ${CAPTURE_FILE}.pid; exec dumpcap -q -i ${INTERFACE} -w ${TMP_CAPTURE_FILE}" &
 
 sleep 1
 export SSLKEYLOGFILE
@@ -31,6 +36,7 @@ int_trap() {
 }
 trap int_trap INT
 sslkeylogged "${@:2}"
+RESULT=$?
 echo "*** Command Stopped ***"
 sleep 1
 
@@ -38,7 +44,13 @@ echo "*** Stopping Capture ***"
 CAPTURE_PID=$(cat ${CAPTURE_FILE}.pid)
 if [[ -n ${CAPTURE_PID} ]]; then
     sudo kill ${CAPTURE_PID}
+    sudo rm -f ${CAPTURE_FILE}.pid
 fi
 
+sudo mv ${TMP_CAPTURE_FILE} ${CAPTURE_FILE}
 sudo chown ${USER}: ${CAPTURE_FILE}
+echo "*** Embedding Keys ***"
+DSB_FILE="${SSLKEYLOGFILE%.*}-dsb.pcapng"
+editcap --inject-secrets "tls,${SSLKEYLOGFILE}" "${CAPTURE_FILE}" "${DSB_FILE}"
 echo "*** Stopped Capture : ${CAPTURE_FILE} Keys: ${SSLKEYLOGFILE} ***"
+exit $RESULT
