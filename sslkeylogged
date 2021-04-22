@@ -9,11 +9,11 @@ else
 fi
 
 
-if [[ -z $SSLKEYLOGFILE ]]; then
-    SSLKEYLOGFILE=$(mktemp -t "sslkeys-XXXXXXXX.txt")
-    echo "*** SSLKEYLOGFILE set to ${SSLKEYLOGFILE} ***"
+if [[ -z $SSLKEYLOGFILE && -z $HOOKED_SSLKEYLOGFILE ]]; then
+    HOOKED_SSLKEYLOGFILE=$(mktemp -u -t "sslkeylogged-XXXXXXXX.keys")
+    echo "*** HOOKED_SSLKEYLOGFILE set to ${HOOKED_SSLKEYLOGFILE} ***"
 fi
 
-export SSLKEYLOGFILE
+export HOOKED_SSLKEYLOGFILE
 
 exec "$@"

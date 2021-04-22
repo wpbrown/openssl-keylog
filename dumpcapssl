@@ -5,23 +5,28 @@ if [[ -z $1 ]]; then
     echo 
     echo "Example: dumpcapssl eth0 curl https://www.google.com/"
     echo 
-    echo "Uses SSLKEYLOGFILE if set, otherwise generates random temporary paths."
+    echo "Uses HOOKED_SSLKEYLOGFILE or SSLKEYLOGFILE if set, otherwise generates random temporary paths."
     echo
     exit 1
 fi
 
 INTERFACE=$1
 
-if [[ -z ${SSLKEYLOGFILE} ]]; then
-    SSLKEYLOGFILE=$(mktemp -t "dumpcapssl-XXXXXXXX.keys")
-    echo "*** SSL keys: ${SSLKEYLOGFILE} ***"
+if [[ -n ${SSLKEYLOGFILE} ]]; then
+    HOOKED_SSLKEYLOGFILE="${SSLKEYLOGFILE}"
 fi
 
-CAPTURE_FILE="${SSLKEYLOGFILE%.*}.pcapng"
+if [[ -z ${HOOKED_SSLKEYLOGFILE} ]]; then
+    HOOKED_SSLKEYLOGFILE=$(mktemp -t "dumpcapssl-XXXXXXXX.keys")
+fi
+
+echo "*** SSL keys: ${HOOKED_SSLKEYLOGFILE} ***"
+
+CAPTURE_FILE="${HOOKED_SSLKEYLOGFILE%.*}.pcapng"
 TMP_CAPTURE_FILE=$(mktemp -t "dumpcapssl-XXXXXXXX.tmp.pcapng")
 echo "*** Capture : ${CAPTURE_FILE} from interface: ${INTERFACE} ***"
 
-rm -f ${SSLKEYLOGFILE}
+rm -f ${HOOKED_SSLKEYLOGFILE}
 rm -f ${CAPTURE_FILE}
 
 echo "*** Starting Capture ***"
@@ -29,7 +34,7 @@ sudo chown root: ${TMP_CAPTURE_FILE}
 sudo setsid bash -c "echo \$\$ > ${CAPTURE_FILE}.pid; exec dumpcap -q -i ${INTERFACE} -w ${TMP_CAPTURE_FILE}" &
 
 sleep 1
-export SSLKEYLOGFILE
+export HOOKED_SSLKEYLOGFILE
 echo "*** Starting Command ***"
 int_trap() {
     echo "*** Command Interrupted ***"
@@ -49,8 +54,13 @@ fi
 
 sudo mv ${TMP_CAPTURE_FILE} ${CAPTURE_FILE}
 sudo chown ${USER}: ${CAPTURE_FILE}
+
+echo "*** Merging Key Files ***"
+cat "${HOOKED_SSLKEYLOGFILE}".* > ${HOOKED_SSLKEYLOGFILE}
+rm "${HOOKED_SSLKEYLOGFILE}".*
+
 echo "*** Embedding Keys ***"
-DSB_FILE="${SSLKEYLOGFILE%.*}-dsb.pcapng"
-editcap --inject-secrets "tls,${SSLKEYLOGFILE}" "${CAPTURE_FILE}" "${DSB_FILE}"
-echo "*** Stopped Capture : ${CAPTURE_FILE} Keys: ${SSLKEYLOGFILE} ***"
+DSB_FILE="${HOOKED_SSLKEYLOGFILE%.*}-dsb.pcapng"
+editcap --inject-secrets "tls,${HOOKED_SSLKEYLOGFILE}" "${CAPTURE_FILE}" "${DSB_FILE}"
+echo "*** Stopped Capture : ${CAPTURE_FILE} Keys: ${HOOKED_SSLKEYLOGFILE} ***"
 exit $RESULT
