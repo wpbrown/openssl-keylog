@@ -87,7 +87,6 @@ static void keylog_callback(const SSL *ssl, const char *line)
     init_keylog_file();
     if (keylog_file_fd >= 0)
     {
-        fprintf(stderr, "[SSLKEYLOG] CB\n");
         write(keylog_file_fd, line, strlen(line));
         write(keylog_file_fd, "\n", 1);
     }
@@ -99,13 +98,13 @@ SSL *SSL_new(SSL_CTX *ctx)
     static void (*set_keylog_cb)();
     if (!func)
     {
-        fprintf(stderr, "[SSLKEYLOG] INIT\n");
+        // fprintf(stderr, "[SSLKEYLOG] INIT\n");
         func = lookup_symbol(__func__);
         set_keylog_cb = lookup_symbol("SSL_CTX_set_keylog_callback");
     }
     if (set_keylog_cb)
     {
-        fprintf(stderr, "[SSLKEYLOG] ENABLING\n");
+        // fprintf(stderr, "[SSLKEYLOG] ENABLING\n");
         /* Override any previous key log callback. */
         set_keylog_cb(ctx, keylog_callback);
     }
@@ -115,15 +114,14 @@ SSL *SSL_new(SSL_CTX *ctx)
 extern void *dlsym(void *handle, const char *name)
 {
     if (!strcmp(name, "dlsym"))
-        // fprintf(stderr, "[SSLKEYLOG] DLSYM itself\n");
         return dlsym;
 
     if (!strcmp(name, "SSL_new"))
     {
-        fprintf(stderr, "[SSLKEYLOG] DLSYM SSL_NEW\n");
+        // fprintf(stderr, "[SSLKEYLOG] DLSYM\n");
         return SSL_new;
     }
-    // fprintf(stderr, "[SSLKEYLOG] REALDLSYM %s\n", name);
+
     return real_dlsym(handle, name);
 }
 
