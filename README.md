@@ -35,15 +35,17 @@ Press control-C to exit.
 ...
 ```
 
-The process of capturing during command execution can be automated with the `dumpcapssl` script.
+Set the `sslkeys` text file in your Wireshark [preferences](https://wiki.wireshark.org/TLS) before you open a capture file to see the decrypted TLS traffic.
+
+The process of capturing during command execution can be automated with the `dumpcapssl` script. The script will automatically merge the secret keys in to the pcapng file so there is no need to change Wireshark preferences.
 
 ```shell
 $ dumpcapssl eth0 ./SimulatedDevice
-*** SSL keys: /tmp/dumpcapssl-BsybG1mk.keys ***
-*** Capture : /tmp/dumpcapssl-BsybG1mk.pcapng from interface: eth0 ***
+*** SSL keys: /tmp/dumpcapssl-iYOYPZd7.keys ***
+*** Capture : /tmp/dumpcapssl-iYOYPZd7.pcapng from interface: eth0 ***
 *** Starting Capture ***
 Capturing on 'eth0'
-File: /tmp/dumpcapssl-BsybG1mk.pcapng
+File: /tmp/dumpcapssl-tiMD6a5K.tmp.pcapng
 *** Starting Command ***
 IoT Hub - Simulated Mqtt device.
 Press control-C to exit.
@@ -51,14 +53,17 @@ Press control-C to exit.
 ^C
 Exiting...
 Device simulator finished.
+*** Command Interrupted ***
 *** Command Stopped ***
 *** Stopping Capture ***
-Packets captured: 556
-Packets received/dropped on interface 'eth0': 556/0 (pcap:0/dumpcap:0/flushed:0/ps_ifdrop:0) (100.0%)
-*** Stopped Capture : /tmp/dumpcapssl-BsybG1mk.pcapng Keys: /tmp/dumpcapssl-BsybG1mk.keys ***
+Packets captured: 134
+Packets received/dropped on interface 'eth0': 134/0 (pcap:0/dumpcap:0/flushed:0/ps_ifdrop:0) (100.0%)
+*** Merging Key Files ***
+*** Embedding Keys ***
+*** Stopped Capture : /tmp/dumpcapssl-iYOYPZd7.pcapng Keys: /tmp/dumpcapssl-iYOYPZd7.keys *** 
 ```
 
-Set the `sslkeys` text file in your Wireshark [preferences](https://wiki.wireshark.org/TLS) before you open the capture file to see the decrypted TLS traffic.
+The file `/tmp/dumpcapssl-iYOYPZd7-dsb.pcapng` in the example above will contain the embedded DSB (Decryption Secrets Block).
 
 # Credit 
 
