@@ -22,7 +22,7 @@
 typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
 
-static int keylog_file_fd = -1;
+static __thread int keylog_file_fd = -1;
 
 void *real_dlsym(void *handle, const char *name);
 
@@ -44,7 +44,7 @@ static void init_keylog_file(void)
     if (filename_len < MAX_PATH - 12)
     {
         strcpy(filename_pid, filename);
-        snprintf(&filename_pid[filename_len], MAX_PATH - filename_len, ".%d", (int)getpid());
+        snprintf(&filename_pid[filename_len], MAX_PATH - filename_len, ".%d.%d", (int)getpid(), (int)gettid());
         keylog_file_fd = open(filename_pid, O_WRONLY | O_APPEND | O_CREAT, 0644);
         if (keylog_file_fd >= 0 && lseek(keylog_file_fd, 0, SEEK_END) == 0)
         {
