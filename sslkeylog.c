@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#if __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 30)
+#include <sys/syscall.h>
+#endif
+
 #define OPENSSL_SONAME1 "libssl.so.1.1"
 #define OPENSSL_SONAME3 "libssl.so.3"
 
@@ -23,6 +27,7 @@ typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
 
 static __thread int keylog_file_fd = -1;
+static __thread int thread_id = -1;
 
 void *real_dlsym(void *handle, const char *name);
 
@@ -41,10 +46,15 @@ static void init_keylog_file(void)
         return;
 
     size_t filename_len = strlen(filename);
-    if (filename_len < MAX_PATH - 12)
+    if (filename_len < MAX_PATH - 32)
     {
+#if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 30)
+        thread_id = (int)gettid();
+#else
+        thread_id = (int)syscall(SYS_gettid);
+#endif
         strcpy(filename_pid, filename);
-        snprintf(&filename_pid[filename_len], MAX_PATH - filename_len, ".%d.%d", (int)getpid(), (int)gettid());
+        snprintf(&filename_pid[filename_len], MAX_PATH - filename_len, ".%d.%d", (int)getpid(), thread_id);
         keylog_file_fd = open(filename_pid, O_WRONLY | O_APPEND | O_CREAT, 0644);
         if (keylog_file_fd >= 0 && lseek(keylog_file_fd, 0, SEEK_END) == 0)
         {
@@ -125,7 +135,7 @@ extern void *dlsym(void *handle, const char *name)
     return real_dlsym(handle, name);
 }
 
-#if __GLIBC__ > 2 || (__GLIBC == 2 && __GLIBC_MINOR__ >= 34)
+#if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 34)
 #define GLIBC_API_VERSION "GLIBC_2.34"
 #else
 #define GLIBC_API_VERSION "GLIBC_2.2.5"
