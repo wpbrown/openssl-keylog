@@ -25,6 +25,7 @@
 
 typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
+typedef void (*SSL_CTX_keylog_cb_func)(const SSL *ssl, const char *line);
 
 static __thread int keylog_file_fd = -1;
 static __thread int thread_id = -1;
@@ -104,8 +105,8 @@ static void keylog_callback(const SSL *ssl, const char *line)
 
 SSL *SSL_new(SSL_CTX *ctx)
 {
-    static SSL *(*func)();
-    static void (*set_keylog_cb)();
+    static SSL *(*func)(SSL_CTX *ctx);
+    static void (*set_keylog_cb)(SSL_CTX *ctx, SSL_CTX_keylog_cb_func cb);
     if (!func)
     {
         // fprintf(stderr, "[SSLKEYLOG] INIT\n");
