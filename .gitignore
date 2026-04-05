@@ -51,4 +51,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# Nix
+flake.lock
+
 libsslkeylog.so
