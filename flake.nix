@@ -18,7 +18,6 @@
         pkgs: with pkgs; [
           bash
           coreutils
-          sudo
           util-linux
           wireshark-cli
         ];
